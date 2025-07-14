@@ -90,21 +90,6 @@ docker compose up -d
     - `_offset`: Número de registros a pular
 - `GET /Curriculo/{id}/disciplina/{disciplina}` - Consulta disciplina específica de um currículo
 
-## 🛠️ Comandos Úteis
-
-```bash
-# Ver logs
-docker compose logs -f
-
-# Parar os serviços  
-docker compose down
-
-# Resetar tudo (apaga dados)
-docker compose down -v
-
-# Reiniciar
-docker compose restart
-```
 
 ## 💡 Exemplos de Uso
 
@@ -143,3 +128,18 @@ curl "http://localhost:8000/Curriculo/6351.2/disciplina?tipo=OBRIGATORIA"
 curl "http://localhost:8000/Curriculo/6351.2/disciplina/ENE0022"
 ```
 
+## 🛠️ Comandos Úteis
+
+```bash
+# Ver logs
+docker compose logs -f
+
+# Parar os serviços  
+docker compose down
+
+# Resetar tudo (apaga dados)
+docker compose down -v
+
+# Reiniciar
+docker compose restart
+```
