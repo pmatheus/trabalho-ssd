@@ -75,9 +75,6 @@ docker compose up -d
     - `_offset`: Número de registros a pular
 - `GET /Curso/{codigo}` - Busca curso específico por código
 
-### 📖 Disciplinas
-⚠️ **Endpoints comentados no código - não disponíveis atualmente**
-
 ### 📋 Currículos
 - `GET /Curriculo?curso={codigo}` - Lista currículos de um curso
   - Query params:
