@@ -1,0 +1,201 @@
+openapi: 3.0.3
+info:
+  title: Curso
+  description: Cursos de graduação da UnB
+  termsOfService: http://api.redes.unb.br/terms
+  contact:
+    email: ricardo.puttini@gmail.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.0
+servers:
+  - url: https://api.redes.unb.br/api/Curso
+tags:
+  - name: Curso
+    description: Cursos de graduação da UnB
+paths:
+  /:
+    get:
+      tags:
+        - Curso
+      summary: Pesquisar cusros...
+      description: Pesquisar cursos por...
+      operationId: search
+      parameters:
+        - name: nome
+          in: query
+          description: nome ou parte do nome do curso
+          required: false
+          schema:
+            type: string
+        - name: unidade
+          in: query
+          description: código da unidade
+          required: false
+          schema:
+            type: string
+        - name: size
+          in: query
+          description: tamanho da página (número de registros por página)
+          required: false
+          schema:
+            type: string
+        - name: offset
+          in: query
+          description: posicao do primerio registro da página (primeiro registro _offset=0)
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CursoSearchSet'        
+  /{id}:
+    get:
+      tags:
+        - Curso
+      summary: Consultar um curso
+      description: Consultar um curso pelo seu código
+      operationId: read
+      parameters:
+        - name: id
+          in: path
+          description: matrícula do aluno
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Curso'          
+        '404':
+          description: not found
+components:
+  schemas:
+    Resource:
+      type: object
+      properties:
+        '@type':
+          type: string
+          enum:
+            - Disciplina
+            - Aluno
+            - Curso
+            - Matricula
+            - EstruturaCurricular
+            - Turma
+            - Historico
+          example: Curso  
+        id:  
+          type: string
+          example: "6351"
+    SearchSet:
+      type: object
+      properties:
+        total:
+          type: integer
+          minimum: 0
+          example: 11
+        size:
+          type: integer
+          minimum: 1
+          example: 10
+        offset:
+          type: integer
+          minimum: 0
+          example: 10
+        links:
+          type: object
+          properties:
+            self:
+              type: string
+              example: Curso?size=10&offset=10
+            next:
+              type: string
+              example: Curso?size=10&offset=20
+            previous:
+              type: string
+              example: Curso?size=10
+          required:
+          - self
+      required:
+      - total
+    Curso:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/Resource'
+      - type: object
+        properties:
+          codigo:
+            type: string
+            example: '6351'
+          nome:
+            type: string
+            example: ENGENHARIA DE REDES DE COMUNICAÇÃO
+          grauAcademico:
+            type: string
+            example: BACHAREL
+          modalidade:
+            $ref: '#/components/schemas/Curso_modalidade'  
+          turno:
+            $ref: '#/components/schemas/Curso_turno'  
+          unidade:
+            type: array
+            items:
+              $ref: '#/components/schemas/Unidade'  
+          coordenador:
+            $ref: '#/components/schemas/Professor'  
+    CursoShort:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/Resource'
+      - type: object
+        properties:
+          codigo:
+            type: string
+            example: '6351'
+          nome:
+            type: string
+            example: ENGENHARIA DE REDES DE COMUNICAÇÃO
+    Curso_modalidade:
+      type: string
+      enum:
+        - Presencial
+        - Ead
+    Curso_turno:
+      type: string
+      enum:
+        - Diurno
+        - Noturno
+    Professor:
+      type: object
+      properties:
+        nome:
+          type: string
+          example: Ricardo Staciarini Puttini
+    Unidade:
+      type: object
+      properties:
+        codigo:
+          type: string
+          example: ENE
+        nome:
+          type: string
+          example: DEPARTAMENTO DE ENGENHARIA ELÉTRICA
+    CursoSearchSet:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/SearchSet'
+      - type: object
+        properties:
+          values:
+            type: array
+            items:
+              $ref: '#/components/schemas/CursoShort'

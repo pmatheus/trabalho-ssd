@@ -1,0 +1,407 @@
+openapi: 3.0.3
+info:
+  title: Curriculo
+  description: ...
+  termsOfService: http://api.redes.unb.br/terms
+  contact:
+    email: ricardo.puttini@gmail.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.0
+servers:
+  - url: https://api.redes.unb.br/api/Curriculo
+tags:
+  - name: Curriculo
+    description: ...
+paths:
+  /:
+    get:
+      tags:
+        - Curriculo
+      summary: Pesquisar...
+      description: Pesquisar...
+      operationId: search
+      parameters:
+        - name: curso
+          in: query
+          description: código do curso desejado
+          required: true
+          example: '6351'
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: status
+          required: false
+          schema:
+            $ref: '#/components/schemas/Curriculo_status'
+        - name: size
+          in: query
+          description: tamanho da página (número de registros por página)
+          required: false
+          schema:
+            type: string
+        - name: offset
+          in: query
+          description: posicao do primerio registro da página (primeiro registro offset=0)
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurriculoSearchSet'
+        '400':
+          description: Bad request
+        '404':
+          description: Not found
+  /{id}:
+    get:
+      tags:
+        - Curriculo
+      summary: Consultar detalhes de uma estrutura curricular
+      description: Consultar detalhes de uma estrutura curricular
+      operationId: read
+      parameters:
+        - name: id
+          in: path
+          description: código do currículo
+          required: true
+          schema:
+            type: string
+          example: '6351.3'  
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Curriculo'          
+        '404':
+          description: not found
+  /{id}/disciplina:
+    get:
+      tags:
+        - Curriculo
+      summary: Pesquisar disciplinas de uma estrutura curricular
+      description: Pesquisar...
+      operationId: searchDisciplina
+      parameters:
+        - name: id
+          in: path
+          description: código do currículo
+          required: true
+          schema:
+            type: string
+          example: '6351.3'  
+        - name: nivel
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 14
+        - name: tipo
+          in: query
+          required: false
+          schema:
+            $ref: "#/components/schemas/Curriculo_disciplina_tipo"
+        - name: unidade
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Curriculo_Disciplina_Short'          
+        '404':
+          description: not found
+  /{id}/disciplina/{disciplina}:
+    get:
+      tags:
+        - Curriculo
+      summary: Consultar uma disciplina de uma estrutura curricular
+      description: Consultar...
+      operationId: readDisciplina
+      parameters:
+        - name: id
+          in: path
+          description: código do currículo
+          required: true
+          schema:
+            type: string
+          example: '6351.3'  
+        - name: disciplina
+          in: path
+          description: código da disciplina
+          required: true
+          schema:
+            type: string
+          example: ENE0088
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Curriculo_Disciplina'          
+        '404':
+          description: not found
+components:
+  schemas:
+    Resource:
+      type: object
+      properties:
+        '@type':
+          type: string
+          enum:
+            - Disciplina
+            - Aluno
+            - Curso
+            - Matricula
+            - Curriculo
+            - Turma
+            - Historico
+          example: Curriculo  
+        id:  
+          type: string
+          example: "6351.3"
+    Resource_Curso:
+      type: object
+      properties:
+        '@type':
+          type: string
+          enum:
+            - Disciplina
+            - Aluno
+            - Curso
+            - Matricula
+            - Curriculo
+            - Turma
+            - Historico
+          example: Curso  
+        id:  
+          type: string
+          example: "6351"
+    Resource_Disciplina:
+      type: object
+      properties:
+        '@type':
+          type: string
+          enum:
+            - Disciplina
+            - Aluno
+            - Curso
+            - Matricula
+            - Curriculo
+            - Turma
+            - Historico
+          example: Disciplina  
+        id:  
+          type: string
+          example: ENE0080
+    SearchSet:
+      type: object
+      properties:
+        total:
+          type: integer
+          minimum: 0
+          example: 5
+        size:
+          type: integer
+          minimum: 1
+          example: 2
+        offset:
+          type: integer
+          minimum: 0
+          example: 2
+        links:
+          type: object
+          properties:
+            self:
+              type: string
+              example: Curriculo?curso=6351&size=2&offset=2
+            next:
+              type: string
+              example: Curriculo?curso=6351&size=2&offset=4
+            previous:
+              type: string
+              example: Curriculo?curso=6351&size=2
+          required:
+          - self
+      required:
+      - total
+    Curriculo:
+      allOf:
+      - $ref: '#/components/schemas/Resource'
+      - type: object
+        properties:
+          codigo:
+            type: string
+            example: '6351.3'
+          status:
+            $ref: '#/components/schemas/Curriculo_status'
+          curso:
+            $ref: '#/components/schemas/CursoShort'
+          cargaHoraria:
+            type: object
+            properties:
+              totalMinima:
+                type: integer
+                example: 3750
+              obrigatoria:
+                type: integer
+                example: 2640
+              optativaMinima:
+                type: integer
+                example: 1110
+              componentesEletivosMaxima:
+                type: integer
+                example: 360
+              periodoLetivoMaxima:
+                type: integer
+                example: 450
+          prazoConclusao:
+            type: object
+            properties:
+              minimo:
+                type: integer
+                example: 10
+              medio:
+                type: integer
+                example: 10
+              maximo:
+                type: integer
+                example: 20
+          inicioVigencia:
+            $ref: '#/components/schemas/PeriodoLetivo'
+          fimVigencia:
+            $ref: '#/components/schemas/PeriodoLetivo'
+          disciplina:
+            type: array
+            items:
+              $ref: "#/components/schemas/Curriculo_Disciplina"
+    CurriculoShort:
+      allOf:
+      - $ref: '#/components/schemas/Resource'
+      - type: object
+        properties:
+          codigo:
+            type: string
+            example: 6351.3
+          status:
+            $ref: '#/components/schemas/Curriculo_status'
+          inicioVigencia:
+            $ref: '#/components/schemas/PeriodoLetivo'
+          fimVigencia:
+            $ref: '#/components/schemas/PeriodoLetivo'
+    Curriculo_status:
+      type: string
+      enum:
+      - ativo
+      - inativo
+    CurriculoSearchSet:
+      allOf:
+      - $ref: '#/components/schemas/SearchSet'
+      - type: object
+        properties:
+          values:
+            type: array
+            items:
+              $ref: '#/components/schemas/CurriculoShort'
+    Curriculo_Disciplina_Short:
+      type: object
+      allOf:
+      - $ref: "#/components/schemas/DisciplinaShort"
+      - type: object
+        properties:
+          nivel:
+            type: integer
+            minimum: 1
+          tipo:
+            $ref: "#/components/schemas/Curriculo_disciplina_tipo"
+    Curriculo_Disciplina:
+      type: object
+      allOf:
+      - $ref: "#/components/schemas/DisciplinaShort"
+      - type: object
+        properties:
+          nivel:
+            type: integer
+            minimum: 1
+          tipo:
+            $ref: "#/components/schemas/Curriculo_disciplina_tipo"
+          cargaHorariaPresencial:
+            type: object
+            properties:
+              teorica:
+                type: integer
+                minimum: 0
+              pratica:
+                type: integer
+                minimum: 0
+              extensionista:
+                type: integer
+                minimum: 0
+    Curriculo_disciplina_tipo:
+      type: string
+      enum:
+      - obrigatoria
+      - optativa
+    DisciplinaShort:
+      allOf:
+      - $ref: '#/components/schemas/Resource_Disciplina'
+      - type: object
+        properties:
+          codigo:
+            type: string
+            example: ENE0080
+          nome:
+            type: string
+            example: SISTEMAS MICROPROCESSADOS
+          unidade:
+              $ref: '#/components/schemas/Unidade'
+    CursoShort:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/Resource_Curso'
+      - type: object
+        properties:
+          codigo:
+            type: string
+            example: '6351'
+          nome:
+            type: string
+            example: ENGENHARIA DE REDES DE COMUNICAÇÃO
+    Unidade:
+      type: object
+      properties:
+        codigo:
+          type: string
+          example: ENE
+        nome:
+          type: string
+          example: DEPARTAMENTO DE ENGENHARIA ELÉTRICA
+    PeriodoLetivo:
+      type: object
+      properties:
+        ano:
+          type: integer
+          minimum: 2000
+          maximum: 2050
+          example: 2018
+        periodo: 
+          type: integer
+          minimum: 0
+          maximum: 2
+          example: 1

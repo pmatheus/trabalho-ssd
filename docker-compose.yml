@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres
+    container_name: sigaa-postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: noneedfornaythingfancy
+    volumes:
+      # Mount SQL files to be executed on first startup
+      - ./sql/SIGAA-CreateDB.sql:/docker-entrypoint-initdb.d/01-SIGAA-CreateDB.sql:ro
+      - "./sql/SIGAA-DDL - novo.sql:/docker-entrypoint-initdb.d/02-SIGAA-DDL-novo.sql:ro"
+      - "./sql/SIGAA-DML-DisciplinaCurso - novo.sql:/docker-entrypoint-initdb.d/03-SIGAA-DML-DisciplinaCurso-novo.sql:ro"
+      - "./sql/SIGAA-DatabaseDML_Alunos - novo.sql:/docker-entrypoint-initdb.d/04-SIGAA-DatabaseDML_Alunos-novo.sql:ro"
+      # Persist data
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: .
+    container_name: sigaa-api
+    restart: always
+    environment:
+      DATABASE_URL: postgresql+psycopg2://SIGAA:SIGAA@db:5432/SIGAA
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      # Mount source files for development with hot reload
+      - ./fastapi_app.py:/app/fastapi_app.py:ro
+      - ./queries.py:/app/queries.py:ro
+      - ./models.py:/app/models.py:ro
+    command: uvicorn fastapi_app:app --host 0.0.0.0 --port 8000 --reload
+
+volumes:
+  pgdata:
