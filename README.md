@@ -17,7 +17,7 @@ API REST para acesso aos dados do sistema SIGAA, implementada com FastAPI e Post
 2. Certifique-se de que o WSL 2 está instalado
 3. Abra o Docker Desktop
 4. Verifique a instalação:
-   ```cmd
+   ```powershell
    docker --version
    ```
 
