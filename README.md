@@ -40,6 +40,17 @@ API REST para acesso aos dados do sistema SIGAA, implementada com FastAPI e Post
    - Documentação interativa: http://localhost:8000/docs
    - API base: http://localhost:8000
 
+## 🐛 Solução de Problemas
+
+### Porta em uso
+Se as portas 5432 ou 8000 já estiverem em uso, pare os processos ou edite as portas no `docker-compose.yml`.
+
+### Reset completo
+```bash
+docker compose down -v
+docker compose up -d
+```
+
 ## 📊 Endpoints Disponíveis
 
 ### 👥 Alunos
@@ -135,13 +146,3 @@ curl "http://localhost:8000/Curriculo/6351.2/disciplina?tipo=OBRIGATORIA"
 curl "http://localhost:8000/Curriculo/6351.2/disciplina/ENE0022"
 ```
 
-## 🐛 Solução de Problemas
-
-### Porta em uso
-Se as portas 5432 ou 8000 já estiverem em uso, pare os processos ou edite as portas no `docker-compose.yml`.
-
-### Reset completo
-```bash
-docker compose down -v
-docker compose up -d
-```
