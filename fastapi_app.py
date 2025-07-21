@@ -29,8 +29,7 @@ import os
 from typing import List
 
 from fastapi import FastAPI, HTTPException, Query, Depends
-from pydantic import BaseModel
-from sqlalchemy import MetaData, create_engine, select, text
+from sqlalchemy import create_engine, text
 
 # Blocos SQL fornecidos pelo professor
 import queries
@@ -47,7 +46,6 @@ DATABASE_URL = os.getenv("DATABASE_URL", DEFAULT_DATABASE_URL)
 
 _engine: Engine | None = None
 _SessionLocal: sessionmaker | None = None
-_metadata: MetaData | None = None
 
 
 def get_engine() -> Engine:
