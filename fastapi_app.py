@@ -57,16 +57,6 @@ def get_engine() -> Engine:
         _engine = create_engine(DATABASE_URL, pool_pre_ping=True)
     return _engine
 
-
-def get_metadata() -> MetaData:
-    global _metadata
-    if _metadata is None:
-        _metadata = MetaData()
-        # Reflete tabelas do banco de dados existente
-        _metadata.reflect(bind=get_engine())
-    return _metadata
-
-
 def get_session() -> Session:
     global _SessionLocal
     if _SessionLocal is None:
