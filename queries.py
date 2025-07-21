@@ -1,5 +1,5 @@
-"""SQL supplied by professor for API endpoints.
-Only Aluno queries for now; extend with others as needed.
+"""SQL fornecido pelo professor para endpoints da API.
+Apenas consultas de Aluno por enquanto; estenda com outras conforme necessário.
 """
 
 ALUNO_DETAIL = (
@@ -20,7 +20,7 @@ where alu.MATRICULA = :id
     """
 )
 
-# The list query includes a window count column _total for pagination
+# A consulta de lista inclui uma coluna de contagem de janela _total para paginação
 ALUNO_LIST = (
     """
 select
@@ -111,7 +111,7 @@ offset :_pageOffset
 limit :_pageSize
 """
 
-# ---------------- Curriculo ----------------
+# ---------------- Currículo ----------------
 CURRICULO_LIST = """
 select 
     count(ec.ID) over() as _total,

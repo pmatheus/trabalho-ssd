@@ -1,4 +1,4 @@
-"""Pydantic models reflecting OpenAPI contracts for Aluno (initial)."""
+"""Modelos Pydantic refletindo contratos OpenAPI para Aluno (inicial)."""
 from __future__ import annotations
 
 from datetime import datetime
@@ -7,7 +7,7 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 
 def iso_now() -> str:
-    """Return current UTC time in ISO 8601 format with 'Z'."""
+    """Retorna o horário UTC atual no formato ISO 8601 com 'Z'."""
     return datetime.utcnow().isoformat() + "Z"
 
 

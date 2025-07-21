@@ -2,17 +2,17 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install dependencies
+# Instala dependências
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application files
+# Copia arquivos da aplicação
 COPY fastapi_app.py .
 COPY queries.py .
 COPY models.py .
 
-# Expose port
+# Expõe porta
 EXPOSE 8000
 
-# Run the application
+# Executa a aplicação
 CMD ["uvicorn", "fastapi_app:app", "--host", "0.0.0.0", "--port", "8000"]

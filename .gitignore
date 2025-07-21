@@ -1,4 +1,4 @@
-# Python
+# Arquivos Python
 __pycache__/
 *.py[cod]
 *$py.class
@@ -13,7 +13,7 @@ venv.bak/
 dist/
 build/
 
-# Virtual environments
+# Ambientes virtuais
 .venv
 pip-log.txt
 pip-delete-this-directory.txt
@@ -25,24 +25,24 @@ pip-delete-this-directory.txt
 *.swo
 *~
 
-# OS
+# Sistema Operacional
 .DS_Store
 Thumbs.db
 
 # Docker
 *.log
 
-# Environment variables
+# Variáveis de ambiente
 .env
 .env.local
 .env.*.local
 
-# Database
+# Banco de dados
 *.db
 *.sqlite
 *.sqlite3
 
-# Testing
+# Testes
 .coverage
 .pytest_cache/
 htmlcov/

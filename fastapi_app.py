@@ -1,26 +1,26 @@
-"""FastAPI application to expose SIGAA database data.
+"""Aplicação FastAPI para expor dados do banco SIGAA.
 
-Prerequisites:
-1. Run the PostgreSQL service via docker compose:
+Pré-requisitos:
+1. Execute o serviço PostgreSQL via docker compose:
 
     cd trabalho2/postgres
     docker compose up -d
 
-   This will expose Postgres on localhost:5432 with database/user/password already
-   created by the SQL scripts located in `trabalho2/sql` (load them in the given
-   order).
+   Isso irá expor o Postgres em localhost:5432 com banco/usuário/senha já
+   criados pelos scripts SQL localizados em `trabalho2/sql` (carregue-os na
+   ordem fornecida).
 
-2. Install dependencies
+2. Instale as dependências
 
     pip install fastapi uvicorn sqlalchemy psycopg2-binary python-dotenv
 
-3. Run the API server
+3. Execute o servidor da API
 
     uvicorn fastapi_app:app --reload
 
-Environment variables (optional):
-    DATABASE_URL : SQLAlchemy-compatible connection string.
-                  Defaults to
+Variáveis de ambiente (opcionais):
+    DATABASE_URL : String de conexão compatível com SQLAlchemy.
+                  Padrão:
                   postgresql+psycopg2://SIGAA:SIGAA@localhost:5432/SIGAA
 """
 from __future__ import annotations
@@ -32,7 +32,7 @@ from fastapi import FastAPI, HTTPException, Query, Depends
 from pydantic import BaseModel
 from sqlalchemy import MetaData, create_engine, select, text
 
-# SQL blocks fornecidos pelo professor
+# Blocos SQL fornecidos pelo professor
 import queries
 import models
 from sqlalchemy.engine import Engine
@@ -40,7 +40,7 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
 # ---------------------------------------------------------------------------
-# Database setup
+# Configuração do banco de dados
 # ---------------------------------------------------------------------------
 DEFAULT_DATABASE_URL = "postgresql+psycopg2://SIGAA:SIGAA@localhost:5432/SIGAA"
 DATABASE_URL = os.getenv("DATABASE_URL", DEFAULT_DATABASE_URL)
@@ -51,7 +51,7 @@ _metadata: MetaData | None = None
 
 
 def get_engine() -> Engine:
-    """Return a singleton SQLAlchemy Engine instance."""
+    """Retorna uma instância singleton do SQLAlchemy Engine."""
     global _engine
     if _engine is None:
         _engine = create_engine(DATABASE_URL, pool_pre_ping=True)
@@ -62,7 +62,7 @@ def get_metadata() -> MetaData:
     global _metadata
     if _metadata is None:
         _metadata = MetaData()
-        # Reflect tables from the existing database
+        # Reflete tabelas do banco de dados existente
         _metadata.reflect(bind=get_engine())
     return _metadata
 
@@ -79,13 +79,13 @@ def get_session() -> Session:
 
 
 # ---------------------------------------------------------------------------
-# FastAPI application
+# Aplicação FastAPI
 # ---------------------------------------------------------------------------
 app = FastAPI(title="SIGAA API", version="1.0.0")
 
 
 # ---------------------------------------------------------------------------
-# Aluno endpoints
+# Endpoints de Aluno
 # ---------------------------------------------------------------------------
 @app.get("/Aluno", tags=["Aluno"], summary="Pesquisa alunos")
 async def list_alunos(
@@ -98,7 +98,7 @@ async def list_alunos(
     offset: int = Query(0, ge=0, description="posicao do primerio registro da página (primeiro registro _offset=0)"),
     db: Session = Depends(get_session),
 ) -> dict:
-    # Build periodoIngresso string from components if provided
+    # Constrói string periodoIngresso a partir dos componentes se fornecidos
     periodoIngresso = None
     if periodoIngresso_ano and periodoIngresso_periodo:
         periodoIngresso = f"{periodoIngresso_ano}.{periodoIngresso_periodo}"
@@ -194,9 +194,9 @@ async def read_aluno(
             "nome": curso.nome,
         }
     
-    # Add curriculo as a string reference if available
+    # Adiciona currículo como referência string se disponível
     if data.get("curriculo"):
-        # Format as "Curriculo/{curso_id}.{curriculo_suffix}"
+        # Formata como "Curriculo/{curso_id}.{curriculo_suffix}"
         curso_id = data.get("curso_codigo", "")
         curriculo_suffix = data.get("curriculo", "")
         if curso_id and curriculo_suffix:
@@ -206,16 +206,8 @@ async def read_aluno(
 
 
 # ---------------------------------------------------------------------------
-# Curso endpoints
+# Endpoints de Curso
 # ---------------------------------------------------------------------------
-class CursoSearchSet(BaseModel):
-    resourceType: str = "Curso"
-    total: int
-    count: int
-    offset: int
-    link: models.Link
-    items: List[dict]
-
 
 @app.get("/Curso", tags=["Curso"], summary="Pesquisa cursos")
 async def list_cursos(
@@ -239,12 +231,12 @@ async def list_cursos(
     for row in rows:
         data = dict(row)
         data.pop("_total", None)
-        # Column names are lowercase from the query
+        # Nomes das colunas estão em minúsculas da consulta
         curso_id = str(data.get("id", ""))
         item = {
             "@type": "Curso",
             "id": curso_id,
-            "codigo": curso_id,  # For Curso, codigo and id are the same
+            "codigo": curso_id,  # Para Curso, código e identificador são iguais
             "nome": data.get("nome", ""),
         }
         items.append(item)
@@ -285,12 +277,12 @@ async def read_curso(
         "nome": data.get("nome", ""),
     }
     
-    # Add optional fields if present
+    # Adiciona campos opcionais se presentes
     if data.get("grau_academico"):
         result["grauAcademico"] = data.get("grau_academico")
     
     if data.get("modalidade"):
-        # Map modalidade values
+        # Mapeia valores de modalidade
         modalidade = data.get("modalidade")
         if modalidade == "P":
             result["modalidade"] = "Presencial"
@@ -300,7 +292,7 @@ async def read_curso(
             result["modalidade"] = modalidade
     
     if data.get("turno"):
-        # Map turno values
+        # Mapeia valores de turno
         turno = data.get("turno")
         if turno == "D":
             result["turno"] = "Diurno"
@@ -309,7 +301,7 @@ async def read_curso(
         else:
             result["turno"] = turno
     
-    # Fetch unidades for this curso
+    # Busca unidades para este curso
     unidades_rows = db.execute(text(queries.CURSO_UNIDADES), {"curso_id": id}).mappings().all()
     result["unidade"] = []
     for unidade_row in unidades_rows:
@@ -318,7 +310,7 @@ async def read_curso(
             "nome": unidade_row.get("nome", "")
         })
     
-    # Add coordenador if available
+    # Adiciona coordenador se disponível
     if data.get("coordenador"):
         result["coordenador"] = {
             "nome": data.get("coordenador")
@@ -328,97 +320,7 @@ async def read_curso(
 
 
 # ---------------------------------------------------------------------------
-# Disciplina endpoints
-# ---------------------------------------------------------------------------
-class DisciplinaSearchSet(BaseModel):
-    resourceType: str = "Disciplina"
-    total: int
-    count: int
-    offset: int
-    link: models.Link
-    items: List[dict]
-
-
-# @app.get("/Disciplina", tags=["Disciplina"], summary="Pesquisa disciplinas")
-# async def list_disciplinas(
-#     nome: str | None = Query(None, description="Nome ou parte do nome da disciplina"),
-#     codigo: str | None = Query(None, description="Código ou parte do código da disciplina"),
-#     unidade: str | None = Query(None, description="Código da unidade organizacional"),
-#     modalidade: str | None = Query(None, description="Modalidade da disciplina"),
-#     cargaHorariaMin: int | None = Query(None, ge=0, description="Carga horária mínima total"),
-#     cargaHorariaMax: int | None = Query(None, ge=0, description="Carga horária máxima total"),
-#     _count: int = Query(10, ge=1, le=100, description="Número de registro retornados por página"),
-#     _offset: int = Query(0, ge=0, description="Índice do primeiro registro da página atual"),
-#     db: Session = Depends(get_session),
-# ) -> DisciplinaSearchSet:
-#     sql = text(queries.DISCIPLINA_LIST)
-#     params = {
-#         "nome": nome,
-#         "modalidade": modalidade,
-#         "unidade": unidade,
-#         "_pageOffset": _offset,
-#         "_pageSize": _count,
-#     }
-#     rows = db.execute(sql, params).mappings().all()
-#     total = rows[0]["_total"] if rows else 0
-    
-#     items = []
-#     for row in rows:
-#         data = dict(row)
-#         data.pop("_total", None)
-#         disciplina_id = str(data.get("id", ""))
-#         item = {
-#             "id": disciplina_id,
-#             "resourceType": "Disciplina",
-#             "codigo": disciplina_id,  # For Disciplina, codigo and id are the same
-#             "nome": data.get("nome", ""),
-#             "lastUpdated": models.iso_now(),
-#         }
-#         if "carga_horaria_total" in data:
-#             item["cargaHorariaTotal"] = data["carga_horaria_total"]
-#         items.append(item)
-    
-#     base_url = f"Disciplina?_count={_count}&_offset={_offset}"
-#     link = models.Link(
-#         self=base_url,
-#         next=f"Disciplina?_count={_count}&_offset={_offset + _count}" if (_offset + _count) < total else None,
-#         previous=f"Disciplina?_count={_count}&_offset={max(_offset - _count, 0)}" if _offset > 0 else None,
-#     )
-    
-#     return DisciplinaSearchSet(
-#         resourceType="Disciplina",
-#         total=total,
-#         count=_count,
-#         offset=_offset,
-#         link=link,
-#         items=items,
-#     )
-
-
-# @app.get("/Disciplina/{id}", tags=["Disciplina"], summary="Consultar uma disciplina")
-# async def read_disciplina(
-#     id: str,
-#     db: Session = Depends(get_session),
-# ) -> dict:
-#     # Use generic query for now as we don't have DISCIPLINA_DETAIL
-#     metadata = get_metadata()
-#     table = metadata.tables.get("sigaa_disciplina")
-#     if table is None:
-#         raise HTTPException(status_code=500, detail="Tabela 'sigaa_disciplina' não encontrada no banco")
-    
-#     id_column = list(table.primary_key.columns)[0]
-#     row = db.execute(select(table).where(id_column == id)).mappings().first()
-#     if row is None:
-#         raise HTTPException(status_code=404, detail="Not found")
-    
-#     data = dict(row)
-#     data["id"] = str(id)
-#     data["resourceType"] = "Disciplina"
-#     return data
-
-
-# ---------------------------------------------------------------------------
-# Curriculo endpoints
+# Endpoints de Currículo
 # ---------------------------------------------------------------------------
 @app.get("/Curriculo", tags=["Curriculo"], summary="Pesquisa currículos")
 async def list_curriculos(
@@ -440,9 +342,9 @@ async def list_curriculos(
     for row in rows:
         data = dict(row)
         data.pop("_total", None)
-        # The query returns just the numeric part (e.g., "2" instead of "6351.2")
+        # A consulta retorna apenas a parte numérica (ex: "2" ao invés de "6351.2")
         curriculo_suffix = str(data.get("id", ""))
-        # Construct the full curriculo ID as "curso.suffix"
+        # Constrói o ID completo do currículo como "curso.sufixo"
         curriculo_id = f"{curso}.{curriculo_suffix}" if curso and curriculo_suffix else curriculo_suffix
         
         item = {
@@ -451,7 +353,7 @@ async def list_curriculos(
             "codigo": curriculo_id,
             "status": data.get("status", "").lower() if data.get("status") else "",
         }
-        # Add curso info from the query result
+        # Adiciona informações do curso do resultado da consulta
         if data.get("curso_codigo"):
             item["curso"] = {
                 "@type": "Curso",
@@ -459,24 +361,24 @@ async def list_curriculos(
                 "codigo": str(data.get("curso_codigo", "")),
                 "nome": data.get("curso_nome", ""),
             }
-        # Add inicioVigencia if available
+        # Adiciona inicioVigencia se disponível
         if data.get("periodo_letivo_vigor_ano") and data.get("periodo_letivo_vigor_numero"):
             item["inicioVigencia"] = {
                 "ano": int(data.get("periodo_letivo_vigor_ano")),
                 "periodo": int(data.get("periodo_letivo_vigor_numero")),
             }
-        # Add fimVigencia as null (not available in current query)
+        # Adiciona fimVigencia como null (não disponível na consulta atual)
         item["fimVigencia"] = None
         items.append(item)
     
-    # Filter by status if provided
+    # Filtra por status se fornecido
     if status:
         items = [item for item in items if item.get("status") == status]
     
-    # Get total count after filtering
+    # Obtém contagem total após filtragem
     filtered_total = len(items)
     
-    # Apply pagination to filtered items
+    # Aplica paginação aos itens filtrados
     paginated_items = items[offset:offset + size]
     
     base_url = f"Curriculo?curso={curso}&size={size}&offset={offset}"
@@ -505,23 +407,23 @@ async def read_curriculo(
     id: str,
     db: Session = Depends(get_session),
 ) -> dict:
-    # The ID can come as "6351.2" from the API but needs to be "6351/2" for the database
-    # The CURRICULO_DETAIL query expects the ID without the slash or dot
+    # O ID pode vir como "6351.2" da API mas precisa ser "6351/2" para o banco de dados
+    # A consulta CURRICULO_DETAIL espera o ID sem a barra ou ponto
     row = db.execute(text(queries.CURRICULO_DETAIL), {"id": id}).mappings().first()
     if row is None:
         raise HTTPException(status_code=404, detail="Not found")
     
     data = dict(row)
     
-    # Build the response according to the OpenAPI spec
+    # Constrói a resposta de acordo com a especificação OpenAPI
     result = {
         "@type": "Curriculo",
-        "id": data.get("id", id),  # This should already be in "6351.2" format from the query
+        "id": data.get("id", id),  # Isso já deve estar no formato "6351.2" da consulta
         "codigo": data.get("id", id),
         "status": data.get("status", "").lower() if data.get("status") else "",
     }
     
-    # Add cargaHoraria object if any values present
+    # Adiciona objeto cargaHoraria se algum valor estiver presente
     carga_horaria = {}
     if data.get("carga_horaria_minima_total") is not None:
         carga_horaria["totalMinima"] = int(data.get("carga_horaria_minima_total"))
@@ -537,7 +439,7 @@ async def read_curriculo(
     if carga_horaria:
         result["cargaHoraria"] = carga_horaria
     
-    # Add prazoConclusao object if any values present
+    # Adiciona objeto prazoConclusao se algum valor estiver presente
     prazo_conclusao = {}
     if data.get("min_periodos") is not None:
         prazo_conclusao["minimo"] = int(data.get("min_periodos"))
@@ -549,7 +451,7 @@ async def read_curriculo(
     if prazo_conclusao:
         result["prazoConclusao"] = prazo_conclusao
     
-    # Add curso info if available
+    # Adiciona informações do curso se disponível
     if data.get("curso_id"):
         result["curso"] = {
             "@type": "Curso",
@@ -558,14 +460,14 @@ async def read_curriculo(
             "nome": data.get("curso_nome", ""),
         }
     
-    # Add inicioVigencia if available
+    # Adiciona inicioVigencia se disponível
     if data.get("periodo_letivo_vigor_ano") and data.get("periodo_letivo_vigor_numero"):
         result["inicioVigencia"] = {
             "ano": int(data.get("periodo_letivo_vigor_ano")),
             "periodo": int(data.get("periodo_letivo_vigor_numero")),
         }
     
-    # Add fimVigencia as null (not available in current query)
+    # Adiciona fimVigencia como null (não disponível na consulta atual)
     result["fimVigencia"] = None
     
     return result
@@ -579,7 +481,7 @@ async def list_curriculo_disciplinas(
     unidade: str | None = Query(None, description="Código da unidade organizacional"),
     db: Session = Depends(get_session),
 ) -> List[dict]:
-    # Convert tipo to database format if provided
+    # Converte tipo para formato do banco de dados se fornecido
     tipo_db = None
     if tipo:
         if tipo == "obrigatoria":
@@ -610,7 +512,7 @@ async def list_curriculo_disciplinas(
             "tipo": data.get("tipo", ""),
         }
         
-        # Add unidade info if available
+        # Adiciona informações da unidade se disponível
         if data.get("unidade_codigo"):
             item["unidade"] = {
                 "codigo": str(data.get("unidade_codigo", "")),
@@ -650,7 +552,7 @@ async def read_curriculo_disciplina(
         "tipo": data.get("tipo", ""),
     }
     
-    # Add carga horaria presencial if available
+    # Adiciona carga horária presencial se disponível
     if any(data.get(field) is not None for field in ["carga_horaria_teorica", "carga_horaria_pratica", "carga_horaria_extensionista"]):
         result["cargaHorariaPresencial"] = {}
         if data.get("carga_horaria_teorica") is not None:
@@ -660,7 +562,7 @@ async def read_curriculo_disciplina(
         if data.get("carga_horaria_extensionista") is not None:
             result["cargaHorariaPresencial"]["extensionista"] = int(data.get("carga_horaria_extensionista"))
     
-    # Add unidade info if available
+    # Adiciona informações da unidade se disponível
     if data.get("unidade_codigo"):
         result["unidade"] = {
             "codigo": str(data.get("unidade_codigo", "")),
