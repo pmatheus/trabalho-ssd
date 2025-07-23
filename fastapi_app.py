@@ -30,6 +30,7 @@ from typing import List
 
 from fastapi import FastAPI, HTTPException, Query, Depends
 from sqlalchemy import create_engine, text
+from urllib.parse import urlencode
 
 # Blocos SQL fornecidos pelo professor
 import queries
@@ -64,6 +65,25 @@ def get_session() -> Session:
         yield db
     finally:
         db.close()
+
+
+# ---------------------------------------------------------------------------
+# Helper functions
+# ---------------------------------------------------------------------------
+def build_pagination_url(endpoint: str, params: dict, new_offset: int, size: int) -> str:
+    """Build pagination URL preserving all query parameters."""
+    # Create a copy of params and update pagination values
+    url_params = {k: v for k, v in params.items() if v is not None}
+    url_params['size'] = size
+    url_params['offset'] = new_offset
+    
+    # Remove internal parameters that shouldn't be in URLs
+    url_params.pop('_pageOffset', None)
+    url_params.pop('_pageSize', None)
+    
+    # Build the URL
+    query_string = urlencode(url_params)
+    return f"{endpoint}?{query_string}"
 
 
 # ---------------------------------------------------------------------------
@@ -114,14 +134,22 @@ async def list_alunos(
             "nome": data.get("nome", ""),
         })
     
-    base_url = f"Aluno?size={size}&offset={offset}"
+    # Build pagination URLs preserving all query parameters
+    current_params = {
+        "nome": nome,
+        "unidade": unidade,
+        "curso": curso,
+        "periodoIngresso.ano": periodoIngresso_ano,
+        "periodoIngresso.periodo": periodoIngresso_periodo,
+    }
+    
     links = {
-        "self": base_url,
+        "self": build_pagination_url("Aluno", current_params, offset, size),
     }
     if (offset + size) < total:
-        links["next"] = f"Aluno?size={size}&offset={offset + size}"
+        links["next"] = build_pagination_url("Aluno", current_params, offset + size, size)
     if offset > 0:
-        links["previous"] = f"Aluno?size={size}&offset={max(offset - size, 0)}"
+        links["previous"] = build_pagination_url("Aluno", current_params, max(offset - size, 0), size)
     
     return {
         "total": total,
@@ -229,14 +257,19 @@ async def list_cursos(
         }
         items.append(item)
     
-    base_url = f"Curso?size={size}&offset={offset}"
+    # Build pagination URLs preserving all query parameters
+    current_params = {
+        "nome": nome,
+        "unidade": unidade,
+    }
+    
     links = {
-        "self": base_url,
+        "self": build_pagination_url("Curso", current_params, offset, size),
     }
     if (offset + size) < total:
-        links["next"] = f"Curso?size={size}&offset={offset + size}"
+        links["next"] = build_pagination_url("Curso", current_params, offset + size, size)
     if offset > 0:
-        links["previous"] = f"Curso?size={size}&offset={max(offset - size, 0)}"
+        links["previous"] = build_pagination_url("Curso", current_params, max(offset - size, 0), size)
     
     return {
         "total": total,
@@ -321,10 +354,12 @@ async def list_curriculos(
     sql = text(queries.CURRICULO_LIST)
     params = {
         "curso": curso,
+        "status": status,
         "_pageOffset": offset,
         "_pageSize": size,
     }
     rows = db.execute(sql, params).mappings().all()
+    total = rows[0]["_total"] if rows else 0
     
     items = []
     for row in rows:
@@ -359,34 +394,26 @@ async def list_curriculos(
         item["fimVigencia"] = None
         items.append(item)
     
-    # Filtra por status se fornecido
-    if status:
-        items = [item for item in items if item.get("status") == status]
-    
-    # Obtém contagem total após filtragem
-    filtered_total = len(items)
-    
-    # Aplica paginação aos itens filtrados
-    paginated_items = items[offset:offset + size]
-    
-    base_url = f"Curriculo?curso={curso}&size={size}&offset={offset}"
-    if status:
-        base_url += f"&status={status}"
+    # Build pagination URLs preserving all query parameters
+    current_params = {
+        "curso": curso,
+        "status": status,
+    }
     
     links = {
-        "self": base_url,
+        "self": build_pagination_url("Curriculo", current_params, offset, size),
     }
-    if (offset + size) < filtered_total:
-        links["next"] = f"Curriculo?curso={curso}&size={size}&offset={offset + size}" + (f"&status={status}" if status else "")
+    if (offset + size) < total:
+        links["next"] = build_pagination_url("Curriculo", current_params, offset + size, size)
     if offset > 0:
-        links["previous"] = f"Curriculo?curso={curso}&size={size}&offset={max(offset - size, 0)}" + (f"&status={status}" if status else "")
+        links["previous"] = build_pagination_url("Curriculo", current_params, max(offset - size, 0), size)
     
     return {
-        "total": filtered_total,
+        "total": total,
         "size": size,
         "offset": offset,
         "links": links,
-        "values": paginated_items,
+        "values": items,
     }
 
 

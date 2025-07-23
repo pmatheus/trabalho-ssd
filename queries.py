@@ -35,7 +35,7 @@ where (unaccent(alu.NOME) ilike '%'||unaccent(:nome)||'%' or :nome is null)
   and (cu.UNIDADE = :unidade or :unidade is null)
   and ((ac.PERIODO_LETIVO_REGISTRO = substring(:periodoIngresso from 1 for 4)||substring(:periodoIngresso from 6))
        or :periodoIngresso is null)
-order by alu.NOME
+order by alu.MATRICULA, alu.NOME
 offset :_pageOffset
 limit :_pageSize
     """
@@ -73,7 +73,7 @@ from SIGAA_CURSO cur
 inner join SIGAA_RL_CURSO_UNIDADE rcu on cur.ID = rcu.CURSO 
 where (unaccent(cur.NOME) ilike '%'||unaccent(:nome)||'%' or :nome is null) and
       (rcu.UNIDADE = :unidade or :unidade is null)
-order by cur.NOME 
+order by cur.ID, cur.NOME 
 offset :_pageOffset 
 limit :_pageSize
 """
@@ -106,7 +106,7 @@ left join SIGAA_UNIDADE und ON dis.UNIDADE = und.ID
 where (unaccent(dis.NOME) ilike '%'||unaccent(:nome)||'%' or :nome is null) and
       (dis.modalidade = :modalidade or :modalidade is null) and
       (dis.UNIDADE = :unidade or :unidade is null)
-order by dis.NOME 
+order by dis.ID, dis.NOME 
 offset :_pageOffset 
 limit :_pageSize
 """
@@ -128,6 +128,8 @@ FROM public.SIGAA_CURRICULO ec
 inner join SIGAA_RL_CURRICULO_CURSO srcc ON ec.ID = srcc.CURRICULO 
 inner join SIGAA_CURSO sc ON srcc.CURSO = sc.ID
 where srcc.CURSO = :curso
+    and (case when ec.STATUS = 'A' then 'ativo' when ec.STATUS = 'I' then 'inativo' end = :status or :status is null)
+order by substring(ec.ID from 6)
 offset :_pageOffset 
 limit :_pageSize
 """
